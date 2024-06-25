@@ -1,1 +1,33 @@
-
+Cisco Secure Endpoint Linux Status Report
+-----------------
+{% for host in groups['all'] %}
+Host: {{ host }}
+{% if hostvars[host]['ampcli_output'] is defined %}
+Status:
+{% for line in hostvars[host]['ampcli_output'] %}
+{% if line.startswith('Status:') %}
+{{ line | regex_replace('^Status:\s*', '') }}
+{% endif %}
+{% endfor %}
+{% if hostvars[host]['ampcli_version_output'] is defined %}
+Version: {{ hostvars[host]['ampcli_version_output'].split('\n')[0] }}
+{% endif %}
+{% set faults_found = false %}
+{% for line in hostvars[host]['ampcli_output'] %}
+{% if line.startswith('Faults:') %}
+{% if 'None' not in line %}
+Faults: {{ line | regex_replace('^Faults:\s*', '') }}
+{% set faults_found = true %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% if not faults_found %}
+Faults: None
+{% endif %}
+{% else %}
+(ampcli not found)
+{% endif %}
+{% if not loop.last %}
+-----------------
+{% endif %}
+{% endfor %}
