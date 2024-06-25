@@ -1,4 +1,4 @@
-![published](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)
+[![published](https://static.production.devnetcloud.com/codeexchange/assets/images/devnet-published.svg)](https://developer.cisco.com/codeexchange/github/repo/ciscotee/CiscoSecureEndpoint-Ansible-CheckStatus)
 # CiscoSecureEndpoint-Ansible-CheckStatus
 The Code use for gathering Cisco Secure Endpoint Linux connector status by [Ansible](https://docs.ansible.com/ansible/latest/index.html)
 This will export the output to the local of control machine to verify and validate the status of connector that might cannot connect to Cisco Secure Endpoint portal.
