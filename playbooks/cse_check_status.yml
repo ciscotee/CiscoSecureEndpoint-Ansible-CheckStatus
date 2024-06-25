@@ -1,0 +1,79 @@
+---
+- name: Check CSE status on Linux servers
+  hosts: all
+  gather_facts: yes
+  vars:
+    debug_enabled: false  # Set to true to enable debug tasks
+
+  tasks:
+    - name: Check if ampcli is available
+      stat:
+        path: /opt/cisco/amp/bin/ampcli
+      register: ampcli_check
+
+    - name: Run CSE CLI status command
+      command: /opt/cisco/amp/bin/ampcli status
+      register: ampcli_status
+      ignore_errors: true  # Ignore errors to handle hosts without ampcli
+      when: ampcli_check.stat.exists
+
+    - name: Run CSE CLI version command
+      command: /opt/cisco/amp/bin/ampcli --version
+      register: ampcli_version
+      ignore_errors: true  # Ignore errors to handle hosts without ampcli
+      when: ampcli_check.stat.exists
+
+    - name: Set ampcli existence status
+      set_fact:
+        ampcli_exists: "{{ ampcli_check.stat.exists | default(false) }}"
+
+    - name: Set ampcli status output
+      set_fact:
+        ampcli_output: "{{ ampcli_status.stdout_lines }}"
+      when:
+        - ampcli_status is defined
+        - ampcli_status.stdout_lines is defined
+        - ampcli_status.stdout_lines | length > 0
+
+    - name: Set ampcli version output
+      set_fact:
+        ampcli_version_output: "{{ ampcli_version.stdout }}"
+      when:
+        - ampcli_version is defined
+        - ampcli_version.stdout is defined
+        - ampcli_version.stdout | length > 0
+
+    - name: Debug ampcli_status
+      debug:
+        var: ampcli_output
+      when:
+        - debug_enabled
+        - ampcli_output is defined
+
+    - name: Debug ampcli_version
+      debug:
+        var: ampcli_version_output
+      when:
+        - debug_enabled
+        - ampcli_version_output is defined
+
+- name: Generate CSE status report on control server
+  hosts: localhost
+  gather_facts: no
+  vars_files:
+    - vars/main.yml
+
+  tasks:
+    - name: Ensure ansible_reports directory exists
+      file:
+        path: "{{ report_directory }}"
+        state: directory
+
+    - name: Generate report
+      template:
+        src: templates/cse_status_report.j2
+        dest: "{{ report_directory }}/cse_status_report.txt"
+
+    - name: Show report path
+      debug:
+        msg: "CSE status report generated: {{ report_directory }}/cse_status_report.txt"
